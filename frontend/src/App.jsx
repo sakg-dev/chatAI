@@ -1,20 +1,49 @@
 /* eslint-disable no-unused-vars */
 "use client"
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 import { ArrowUp } from "lucide-react"
 const App = () => {
-  const [messages, setMessage] = useState([])
-  const [m, setM] = useState("")
+  const [messages, setMessages] = useState([])
   const [userInput, setUserInput] = useState("")
   const [loading, setLoading] = useState(false)
 
+  // useEffect(() => {
+  //   console.log(messages)
+  // }, [messages])
+
+  const addAIMessage = (setMessages, chunk) => {
+    setMessages(prev => {
+      if (prev[prev.length - 1].role == "client") {
+        return [...prev, {
+          role: "ai",
+          message: chunk.choices[0].delta.content
+        }]
+      } else {
+        const newMessages = prev.map((val, idx) => {
+          if (idx == prev.length - 1) {
+            return { role: "ai", message: val.message + chunk.choices[0].delta.content }
+          } else {
+            return val
+          }
+        })
+        return newMessages
+      }
+    })
+  }
+
   const handleButtonClick = async () => {
     setLoading(true)
-    setMessage([...messages, {
-      role: "client",
-      message: userInput
-    }])
+    setUserInput("")
+
+    // Add client message to the messages state
+    setMessages(prev => [
+      ...prev,
+      {
+        role: "client",
+        message: userInput
+      }
+    ])
 
     const base_url = "http://127.0.0.1:5000"
 
@@ -29,15 +58,16 @@ const App = () => {
     const decoder = new TextDecoder("utf-8")
 
     let done = false
-    let allChunks = []
 
+    // Get all stream messages
     while (!done) {
       const { value, done: doneReading } = await reader.read()
       done = doneReading
       try {
         let chunk = JSON.parse(decoder.decode(value).replace("data:", ""))
         if (chunk.choices[0].delta.content && chunk.choices[0].delta.content.trim() != "") {
-          setM(prev=>prev + chunk.choices[0].delta.content)
+          // setM(prev => prev + chunk.choices[0].delta.content)
+          addAIMessage(setMessages, chunk)
         }
       } catch (err) {
         try {
@@ -47,28 +77,35 @@ const App = () => {
             let chunk = chunks[i]
             if (chunk.trim() != "") {
               chunk = JSON.parse(chunk)
-              if (chunk && chunk.choices[0].delta.content.trim() != "") setM(prev=>prev + chunk.choices[0].delta.content)
+              if (chunk && chunk.choices[0].delta.content.trim() != "") addAIMessage(setMessages, chunk)
             }
           }
         } catch (errr) { /* */ }
       }
     }
-
-    setUserInput("")
-
-    // Here make some reqs
     setLoading(false)
   }
 
   return (
     <div className='flex relative min-h-screen'>
-      <main>
-        {m}
+      <main className='flex flex-col items-center w-full gap-4'>
+        {messages.map((val, idx) => {
+          if (val.role == "client") {
+            return <div className='w-[50vw] bg-gray-200 py-2 px-3 rounded-xl'>
+              {val.message}
+            </div>
+          } else {
+            return <div className='w-[50vw] bg-white border'>
+              {val.message}
+            </div>
+          }
+        })}
       </main>
-      <div className='absolute bottom-5 w-full flex justify-center'>
-        <div className='w-[80vw] h-12 relative'>
-          <input value={userInput} onChange={(e) => { setUserInput(e.target.value) }} placeholder='Ask Anything' className='w-full h-[80%] p-5.5 rounded-2xl border' />
-          <button disabled={loading} onClick={handleButtonClick} className={`bg-black ${loading && "opacity-80"} absolute -right-0.5 p-3 -top-0.5 rounded-full cursor-pointer`}><ArrowUp color='white' /></button>
+      <div className='fixed bottom-5 w-full flex justify-center'>
+        <input value={userInput} onChange={(e) => { setUserInput(e.target.value) }} placeholder='Ask Anything' className='w-[80vw] h-12 p-5.5 rounded-2xl border bg-white' onKeyDown={(e) => { if (e.code == "Enter" || e.code == "NumpadEnter") handleButtonClick() }} />
+        <div className='flex justify-between items-center w-[80vw] h-12 px-1 z-20 absolute pointer-events-none'>
+          <div></div>
+          <button disabled={loading} onClick={handleButtonClick} className={`bg-black pointer-events-auto ${loading && "opacity-80"} p-1.5 rounded-xl cursor-pointer`}><ArrowUp color='white' /></button>
         </div>
       </div>
     </div>
