@@ -1,9 +1,11 @@
+/* eslint-disable no-unused-vars */
 "use client"
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 
 import { ArrowUp } from "lucide-react"
 const App = () => {
   const [messages, setMessage] = useState([])
+  const [m, setM] = useState("")
   const [userInput, setUserInput] = useState("")
   const [loading, setLoading] = useState(false)
 
@@ -19,12 +21,38 @@ const App = () => {
     const req = await fetch(`${base_url}/ai`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json' // Declare the content type
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ message: userInput })
     })
-    const res = await req.json()
-    console.log(res)
+    const reader = req.body.getReader()
+    const decoder = new TextDecoder("utf-8")
+
+    let done = false
+    let allChunks = []
+
+    while (!done) {
+      const { value, done: doneReading } = await reader.read()
+      done = doneReading
+      try {
+        let chunk = JSON.parse(decoder.decode(value).replace("data:", ""))
+        if (chunk.choices[0].delta.content && chunk.choices[0].delta.content.trim() != "") {
+          setM(prev=>prev + chunk.choices[0].delta.content)
+        }
+      } catch (err) {
+        try {
+          const val = decoder.decode(value).replace("data:", "")
+          let chunks = val.split("\n")
+          for (let i = 0; i < chunks.length; i++) {
+            let chunk = chunks[i]
+            if (chunk.trim() != "") {
+              chunk = JSON.parse(chunk)
+              if (chunk && chunk.choices[0].delta.content.trim() != "") setM(prev=>prev + chunk.choices[0].delta.content)
+            }
+          }
+        } catch (errr) { /* */ }
+      }
+    }
 
     setUserInput("")
 
@@ -35,7 +63,7 @@ const App = () => {
   return (
     <div className='flex relative min-h-screen'>
       <main>
-
+        {m}
       </main>
       <div className='absolute bottom-5 w-full flex justify-center'>
         <div className='w-[80vw] h-12 relative'>

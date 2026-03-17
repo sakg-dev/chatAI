@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response
 import requests
 from flask_cors import CORS, cross_origin
 from dotenv import load_dotenv
@@ -27,40 +27,21 @@ def ai_req():
             'Authorization': f'Bearer {os.getenv("HACKCLUB_AI_API_KEY")}'
         },
         json={
-            'model': 'openai/gpt-4o',
+            'model': 'google/gemini-3-flash-preview',
             'messages': [{'role': 'user', 'content': data["message"]}],
-            'stream': False
+            'stream': True
         },
-        stream=False
+        stream=True
     )
-    output = response.json()["choices"][0]["message"]["content"]
 
-    # if response.status_code != 200:
-    #     error_data = response.json()
-    #     print(f"Error: {error_data['error']['message']}")
-    #     return jsonify({"success": False})
+    def generate():
+        for chunk in response.iter_lines():
+            chunk_val = chunk.decode("utf-8")
+            if chunk and ": OPENROUTER PROCESSING" not in chunk_val and "data: [DONE]" not in chunk_val:
+                print(chunk_val, end="\n\n\n")
+                yield chunk_val + "\n"
 
-    # for line in response.iter_lines():
-    #     if line:
-    #         line_text = line.decode('utf-8')
-    #         if line_text.startswith('data: '):
-    #             data = line_text[6:]
-    #             if data == '[DONE]':
-    #                 break
-    #             try:
-    #                 parsed = json.loads(data)
-    #                 if 'error' in parsed:
-    #                     print(f"Stream error: {parsed['error']['message']}")
-    #                     if parsed.get('choices', [{}])[0].get('finish_reason') == 'error':
-    #                         print("Stream terminated due to error")
-    #                     break
-    #                 content = parsed['choices'][0]['delta'].get('content')
-    #                 if content:
-    #                     print(content, end='', flush=True)
-    #             except json.JSONDecodeError:
-    #                 pass
-
-    return jsonify({"success": True, "output": output})
+    return Response(generate(), content_type="text/plain")
 
 
 if __name__ == "__main__":
