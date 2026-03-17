@@ -93,7 +93,7 @@ const App = () => {
 
   return (
     <div className='flex relative min-h-screen'>
-      <main className='flex flex-col w-[70vw] min-h-screen m-auto pt-4 pb-[10vh] gap-4'>
+      <main className='convo-area flex flex-col w-[70vw] min-h-screen m-auto pt-4 pb-[10vh] gap-4'>
         {messages.map((val, idx) => {
           if (val.role == "client") {
             return <div key={idx} className='max-w-[50vw] bg-gray-200 py-2 self-end px-3 rounded-xl'>

@@ -38,3 +38,49 @@
         opacity: 0.9;
     }
 }
+
+.convo-area {
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+/* Headings */
+.convo-area h1,
+.convo-area h2,
+.convo-area h3,
+.convo-area h4,
+.convo-area h5,
+.convo-area h6 {
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+
+/* Paragraphs */
+.convo-area p {
+  margin: 8px 0;
+}
+
+/* Lists */
+.convo-area ul,
+.convo-area ol {
+  margin: 8px 0 8px 20px;
+}
+
+/* List items */
+.convo-area li {
+  margin: 4px 0;
+}
+
+/* Code blocks */
+.convo-area pre {
+  margin: 12px 0;
+  padding: 12px;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+/* Inline code */
+.convo-area code {
+  padding: 2px 4px;
+  border-radius: 4px;
+}
