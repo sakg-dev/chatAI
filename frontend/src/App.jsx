@@ -1,8 +1,9 @@
 /* eslint-disable no-unused-vars */
 "use client"
-import React, { useEffect, useState } from 'react'
-
+import { useState } from 'react'
 import { ArrowUp } from "lucide-react"
+import Markdown from './components/Markdown'
+
 const App = () => {
   const [messages, setMessages] = useState([])
   const [userInput, setUserInput] = useState("")
@@ -11,6 +12,10 @@ const App = () => {
   // useEffect(() => {
   //   console.log(messages)
   // }, [messages])
+
+  // useEffect(() => {
+  //   navigator.clipboard.writeText("test test test")
+  // }, [])
 
   const addAIMessage = (setMessages, chunk) => {
     setMessages(prev => {
@@ -88,15 +93,15 @@ const App = () => {
 
   return (
     <div className='flex relative min-h-screen'>
-      <main className='flex flex-col items-center w-full gap-4'>
+      <main className='flex flex-col w-[70vw] min-h-screen m-auto pt-4 pb-[10vh] gap-4'>
         {messages.map((val, idx) => {
           if (val.role == "client") {
-            return <div className='w-[50vw] bg-gray-200 py-2 px-3 rounded-xl'>
-              {val.message}
+            return <div key={idx} className='max-w-[50vw] bg-gray-200 py-2 self-end px-3 rounded-xl'>
+              <Markdown>{val.message}</Markdown>
             </div>
           } else {
-            return <div className='w-[50vw] bg-white border'>
-              {val.message}
+            return <div key={idx} className='w-full'>
+              <Markdown>{val.message}</Markdown>
             </div>
           }
         })}
