@@ -21,6 +21,7 @@ def home():
 @cross_origin()
 def ai_req():
     data = request.json
+    prompt = f"Previous convos:{data['messages']}\n\nCurrent User Query:{data['userInput']}"
     response = requests.post(
         'https://ai.hackclub.com/proxy/v1/chat/completions',
         headers={
@@ -28,7 +29,7 @@ def ai_req():
         },
         json={
             'model': 'google/gemini-3-flash-preview',
-            'messages': [{'role': 'user', 'content': data["message"]}],
+            'messages': [{'role': 'user', 'content': prompt}],
             'stream': True
         },
         stream=True
@@ -38,7 +39,7 @@ def ai_req():
         for chunk in response.iter_lines():
             chunk_val = chunk.decode("utf-8")
             if chunk and ": OPENROUTER PROCESSING" not in chunk_val and "data: [DONE]" not in chunk_val:
-                print(chunk_val, end="\n\n\n")
+                # print(chunk_val, end="\n\n\n")
                 yield chunk_val + "\n"
 
     return Response(generate(), content_type="text/plain")

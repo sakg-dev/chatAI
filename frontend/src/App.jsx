@@ -9,14 +9,6 @@ const App = () => {
   const [userInput, setUserInput] = useState("")
   const [loading, setLoading] = useState(false)
 
-  // useEffect(() => {
-  //   console.log(messages)
-  // }, [messages])
-
-  // useEffect(() => {
-  //   navigator.clipboard.writeText("test test test")
-  // }, [])
-
   const addAIMessage = (setMessages, chunk) => {
     setMessages(prev => {
       if (prev[prev.length - 1].role == "client") {
@@ -57,7 +49,7 @@ const App = () => {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ message: userInput })
+      body: JSON.stringify({ userInput, messages })
     })
     const reader = req.body.getReader()
     const decoder = new TextDecoder("utf-8")
