@@ -18,3 +18,6 @@
 //     const response = await req.json()
 //     console.log(response.choices[0].message.content);
 // })()
+
+// let a = {role:"ai",message:"abcduonmdgu jhiwe vujhgcnbsvr ui jhvbv"}
+// console.log({...a,role:"g"})

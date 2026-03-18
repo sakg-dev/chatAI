@@ -2,7 +2,7 @@
 "use client"
 import { useState } from 'react'
 import { ArrowUp } from "lucide-react"
-import Markdown from './components/Markdown'
+import Message from './components/Message'
 
 const App = () => {
   const [messages, setMessages] = useState([])
@@ -11,25 +11,27 @@ const App = () => {
 
   const addAIMessage = (setMessages, chunk) => {
     setMessages(prev => {
-      if (prev[prev.length - 1].role == "client") {
+      const last = prev[prev.length - 1]
+
+      if (last.role == "ai") {
+        const updated = [...prev]
+        updated[updated.length - 1] = {
+          ...last,
+          message: last.message + chunk.choices[0].delta.content
+        }
+        return updated
+      } else {
         return [...prev, {
           role: "ai",
           message: chunk.choices[0].delta.content
         }]
-      } else {
-        const newMessages = prev.map((val, idx) => {
-          if (idx == prev.length - 1) {
-            return { role: "ai", message: val.message + chunk.choices[0].delta.content }
-          } else {
-            return val
-          }
-        })
-        return newMessages
       }
     })
   }
 
   const handleButtonClick = async () => {
+    const userinput = userInput
+
     setLoading(true)
     setUserInput("")
 
@@ -38,7 +40,7 @@ const App = () => {
       ...prev,
       {
         role: "client",
-        message: userInput
+        message: userinput
       }
     ])
 
@@ -49,7 +51,7 @@ const App = () => {
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ userInput, messages })
+      body: JSON.stringify({ userInput: userinput, messages })
     })
     const reader = req.body.getReader()
     const decoder = new TextDecoder("utf-8")
@@ -63,7 +65,6 @@ const App = () => {
       try {
         let chunk = JSON.parse(decoder.decode(value).replace("data:", ""))
         if (chunk.choices[0].delta.content && chunk.choices[0].delta.content.trim() != "") {
-          // setM(prev => prev + chunk.choices[0].delta.content)
           addAIMessage(setMessages, chunk)
         }
       } catch (err) {
@@ -87,15 +88,8 @@ const App = () => {
     <div className='flex relative min-h-screen'>
       <main className='convo-area flex flex-col w-[70vw] min-h-screen m-auto pt-4 pb-[10vh] gap-4'>
         {messages.map((val, idx) => {
-          if (val.role == "client") {
-            return <div key={idx} className='max-w-[50vw] bg-gray-200 py-2 self-end px-3 rounded-xl'>
-              <Markdown>{val.message}</Markdown>
-            </div>
-          } else {
-            return <div key={idx} className='w-full'>
-              <Markdown>{val.message}</Markdown>
-            </div>
-          }
+          {/* NOw only component with different props will eb rerender */}
+          <Message {...val} key={idx} />
         })}
       </main>
       <div className='fixed bottom-5 w-full flex justify-center'>
